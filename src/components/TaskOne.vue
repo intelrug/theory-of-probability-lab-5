@@ -172,13 +172,34 @@ export default {
   },
   methods: {
     fileChange() {
-      const { files } = this.$refs.fileControl;
+      const {files} = this.$refs.fileControl;
       const reader = new FileReader();
       reader.readAsText(files[0]);
       reader.onloadend = (e) => {
         let arr = e.target.result.split('\r\n');
-        arr = arr.map(item => item.split(' '));
-        this.table = arr.map(a => a.map(i => parseFloat(i.replace(',', '.'))));
+        arr = arr.map(item => item.replace(/\s{2,}/g, ' ').split(' '));
+        arr = arr.map(a => a.map(i => parseFloat(i.replace(',', '.'))));
+        let biggerThanTen = false;
+        arr.forEach((item) => {
+          if (!biggerThanTen && item.length > 10) {
+            biggerThanTen = true;
+          }
+        });
+        let newArr = [];
+        if (biggerThanTen) {
+          arr.forEach((item) => {
+            newArr = [...newArr, ...item];
+          });
+          arr = [];
+          for (let i = 0; i < newArr.length; i += 10) {
+            const temp = [];
+            for (let j = 0; j < 10; j += 1) {
+              temp.push(newArr[i + j]);
+            }
+            arr.push(temp);
+          }
+        }
+        this.table = arr;
       };
     },
   },

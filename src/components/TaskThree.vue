@@ -2,7 +2,6 @@
 <template>
   <div class="wrap">
     <div class="left-column">
-      <input type="file" id="file" ref="fileControl" v-on:change="fileChange">
       <br>
       <br>
       <input-number label="Кол-во интервалов: " :min="1" :max="99999" :step="1"
@@ -52,26 +51,34 @@
         <table>
           <tr>
             <td>X<sub>i</sub> ; X<sub>i + 1</sub></td>
-            <td v-for="(x, i) in intervalTable.x" :key="i">
-              {{i === 0 ? '[' : '('}}{{x[0]}}; {{x[1]}}]
-            </td>
-          </tr>
-          <tr>
-            <td>C<sub>i</sub></td>
-            <td v-for="(C, i) in intervalTable.c" :key="i">
-              {{C}}
+            <td v-for="(x, i) in intervalCount" :key="i">
+              <div style="display: flex;">
+                <input-number :min="-999999999" :max="999999999" :step="0.1"
+                              v-model="table.xStart[i]"></input-number>;
+                <input-number :min="-999999999" :max="999999999" :step="0.1"
+                              v-model="table.xEnd[i]"></input-number>
+              </div>
             </td>
           </tr>
           <tr>
             <td>n<sub>i</sub></td>
-            <td v-for="(n, i) in intervalTable.n" :key="i">
-              {{n}}
+            <td v-for="(n, i) in intervalCount" :key="i">
+              <div style="display: flex; flex-direction: row; align-items: center">
+              <input-number :min="-999999999" :max="999999999" :step="1"
+                            v-model="table.n[i]"></input-number>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td>C<sub>i</sub></td>
+            <td v-for="(C, i) in intervalCount" :key="i">
+              {{intervalTable.c[i]}}
             </td>
           </tr>
           <tr>
             <td>w<sub>i</sub></td>
-            <td v-for="(w, i) in intervalTable.w" :key="i">
-              {{w}}
+            <td v-for="(w, i) in intervalCount" :key="i">
+              {{intervalTable.w[i]}}
             </td>
           </tr>
         </table>
@@ -108,8 +115,8 @@ import FrequencyHistogram from './FrequencyHistogram';
 import FrequencyPolygon from './FrequencyPolygon';
 import RelativeFrequencyHistogram from './RelativeFrequencyHistogram';
 import RelativeFrequencyPolygon from './RelativeFrequencyPolygon';
-import DistributionFunction from './DistributionFunction';
-import InputNumber from './InputNumber';
+import DistributionFunction from './DistributionFunction1';
+import InputNumber from './InputNumber1';
 
 export default {
   name: 'TaskTwo',
@@ -125,65 +132,74 @@ export default {
   data() {
     return {
       tab: 0,
-      intervalCount: 3,
-      table: [[]],
+      intervalCount: 5,
+      table: {
+        xStart: [0, 5, 10, 15, 20],
+        xEnd: [5, 10, 15, 20, 25],
+        n: [15, 75, 100, 50, 10],
+      },
     };
   },
   computed: {
     select() {
-      return i => ({select: this.tab === i});
+      return i => ({ select: this.tab === i });
     },
-    arrayFromTable() {
-      const arr = [];
-      this.table.forEach((item) => {
-        item.forEach((item) => {
-          if (item) {
-            arr.push(item);
-          }
-        });
-      });
-      return arr;
-    },
-    compressedTable() {
-      const compressed = [];
-      const copy = this.arrayFromTable.slice(0);
-
-      for (let i = 0; i < this.arrayFromTable.length; i += 1) {
-        let myCount = 0;
-        for (let w = 0; w < copy.length; w += 1) {
-          if (this.arrayFromTable[i] === copy[w]) {
-            myCount += 1;
-            delete copy[w];
-          }
-        }
-
-        if (myCount > 0) {
-          const a = {};
-          a.x = this.arrayFromTable[i];
-          a.y = myCount;
-          compressed.push(a);
-        }
-      }
-      compressed.sort((a, b) => (a.x > b.x ? 1 : -1));
-      return compressed;
-    },
+    // arrayFromTable() {
+    //   const arr = [];
+    //   this.table.forEach((item) => {
+    //     item.forEach((item) => {
+    //       if (item) {
+    //         arr.push(item);
+    //       }
+    //     });
+    //   });
+    //   return arr;
+    // },
+    // compressedTable() {
+    //   const compressed = [];
+    //   const copy = this.arrayFromTable.slice(0);
+    //
+    //   for (let i = 0; i < this.arrayFromTable.length; i += 1) {
+    //     let myCount = 0;
+    //     for (let w = 0; w < copy.length; w += 1) {
+    //       if (this.arrayFromTable[i] === copy[w]) {
+    //         myCount += 1;
+    //         delete copy[w];
+    //       }
+    //     }
+    //
+    //     if (myCount > 0) {
+    //       const a = {};
+    //       a.x = this.arrayFromTable[i];
+    //       a.y = myCount;
+    //       compressed.push(a);
+    //     }
+    //   }
+    //   compressed.sort((a, b) => (a.x > b.x ? 1 : -1));
+    //   return compressed;
+    // },
     sumNi() {
-      return this.compressedTable.reduce((acc, val) => (acc + val.y), 0);
+      return this.table.n.reduce((acc, val) => (acc + val), 0);
+      return 0;
     },
     w() {
-      return this.compressedTable.map(({x, y}) => ({
-        x,
-        y: new Decimal(y).div(this.sumNi).toDP(5),
-      }));
+      const arr = [];
+      for (let i = 0; i < this.realCount; i += 1) {
+        arr.push({
+          x: this.intervalTable.c[i],
+          y: new Decimal(this.table.n[i]).div(this.sumNi).toDP(5),
+        });
+      }
+      return arr;
     },
     xb() {
-      return this.w.reduce((acc, {x, y}) => new Decimal(x)
+      return this.w.reduce((acc, { x, y }) => new Decimal(x)
         .mul(y)
         .plus(acc)
         .toDP(5), 0);
     },
     db() {
-      return this.w.reduce((acc, {x, y}) => new Decimal(this.xb)
+      return this.w.reduce((acc, { x, y }) => new Decimal(this.xb)
         .minus(x)
         .pow(2)
         .mul(y)
@@ -194,59 +210,54 @@ export default {
       return new Decimal(this.db).sqrt().toDP(5);
     },
     S() {
-      return new Decimal(this.compressedTable.reduce((acc, {x, y}) => new Decimal(this.xb)
-        .minus(x)
-        .pow(2)
-        .mul(y)
-        .div(this.sumNi - 1)
-        .plus(acc), 0)).sqrt().toDP(5);
+      let sum = new Decimal(0);
+      for (let i = 0; i < this.realCount; i += 1) {
+        sum = new Decimal(this.xb)
+          .minus(this.intervalTable.c[i])
+          .pow(2)
+          .mul(this.table.n[i])
+          .div(this.sumNi - 1)
+          .plus(sum);
+        return sum.sqrt().toDP(5);
+      }
+      return sum;
+    },
+    realCount() {
+      for (let i = 0; i < this.intervalCount; i += 1) {
+        if (
+          this.table.xStart[i] == null
+          || this.table.xEnd[i] == null
+          || this.table.n[i] == null
+        ) return i;
+      }
+      return this.intervalCount;
     },
     intervalTable() {
-      const x = [];
-      const c = [];
+      const x = [[]];
       const n = [];
+      const c = [];
       const w = [];
-      if (this.compressedTable.length > 0) {
-        const interval = new Decimal(this.compressedTable[this.compressedTable.length - 1].x)
-          .minus(this.compressedTable[0].x)
-          .div(this.intervalCount);
-
-        for (let i = 0; i < this.intervalCount; i += 1) {
-          const start = new Decimal(this.compressedTable[0].x + interval * i).toDP(3);
-          const end = new Decimal(this.compressedTable[0].x + interval * (i + 1)).toDP(3);
-          x.push([start, end]);
-          c.push(new Decimal(end).plus(start).div(2).toDP(3))
-          const sumN = new Decimal(0);
-          const sumW = new Decimal(0);
-          for (let j = 0; j < this.compressedTable.length; j += 1) {
-            const elemX = this.compressedTable[j].x;
-            const elemY = this.compressedTable[j].y;
-            if (
-              (
-                (j === 0 && elemX >= start)
-                || (j !== 0 && elemX > start)
-              )
-              && elemX <= end
-            ) {
-              sumN = sumN.plus(elemY);
-              sumW = sumW.plus(new Decimal(elemY).div(this.sumNi).toDP(5));
-            }
-          }
-          n.push(sumN);
-          w.push(sumW);
-        }
+      for (let i = 0; this.realCount > 0 && i < this.realCount; i += 1) {
+        const start = new Decimal(this.table.xStart[i]).toDP(3);
+        const end = new Decimal(this.table.xEnd[i]).toDP(3);
+        c.push(new Decimal(end).plus(start).div(2).toDP(3));
+        w.push(new Decimal(this.table.n[i]).div(this.sumNi).toDP(5));
+        x[i] = [start, end];
+        n[i] = this.table.n[i];
       }
-      return {x, c, n, w};
+      return {
+        x, n, c, w,
+      };
     },
   },
   methods: {
     fileChange() {
-      const {files} = this.$refs.fileControl;
+      const { files } = this.$refs.fileControl;
       const reader = new FileReader();
       reader.readAsText(files[0]);
       reader.onloadend = (e) => {
         let arr = e.target.result.split('\r\n');
-        arr = arr.map(item => item.replace(/\s{2,}/g, ' ').split(' '));
+        arr = arr.map(item => item.split(' '));
         arr = arr.map(a => a.map(i => parseFloat(i.replace(',', '.'))));
         let biggerThanTen = false;
         arr.forEach((item) => {

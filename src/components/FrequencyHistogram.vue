@@ -1,15 +1,5 @@
 <template>
   <div>
-    <table>
-      <tr>
-        <td>x</td>
-        <td v-for="(item, index) in chartData" :key="index">{{item.x}}</td>
-      </tr>
-      <tr>
-        <td>n<sub>i</sub></td>
-        <td v-for="(item, index) in chartData" :key="index">{{item.y}}</td>
-      </tr>
-    </table>
     <br>
     <scatter-chart :chart-data="graphData" :options="options"></scatter-chart>
   </div>
@@ -25,6 +15,22 @@ export default {
     ScatterChart,
   },
   computed: {
+    data() {
+      let arr = [];
+      let arr1 = [];
+      if (this.chartData.x.length > 0) {
+        arr = this.chartData.x.map((x, index) => [
+          { x: x[0], y: this.chartData.n[index] },
+          { x: x[1], y: this.chartData.n[index] },
+        ]);
+        arr1.push({ x: this.chartData.x[0][0], y: 0 });
+        arr.forEach((item) => {
+          arr1 = [...arr1, ...item];
+        });
+        arr1.push({ x: this.chartData.x[this.chartData.x.length - 1][1], y: 0 });
+      }
+      return arr1;
+    },
     graphData() {
       return {
         datasets: [{
@@ -34,7 +40,7 @@ export default {
           fill: false,
           lineTension: 0,
           showLine: true,
-          data: this.chartData,
+          data: this.data,
         }],
       };
     },

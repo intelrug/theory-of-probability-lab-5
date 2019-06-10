@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Router from 'vue-router';
 import TaskOne from './components/TaskOne.vue';
 import TaskTwo from './components/TaskTwo.vue';
+import TaskThree from './components/TaskThree.vue';
 
 Vue.use(Router);
 
@@ -18,6 +19,10 @@ export default new Router({
     {
       path: '/2',
       component: TaskTwo,
+    },
+    {
+      path: '/3',
+      component: TaskThree,
     },
   ],
 });

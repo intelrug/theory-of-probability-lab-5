@@ -9,6 +9,7 @@
 <!--      <router-link to="/4/2" tag="li">Задание 2</router-link>-->
       <router-link to="/1" tag="li">Задание 1</router-link>
       <router-link to="/2" tag="li">Задание 2</router-link>
+      <router-link to="/3" tag="li">Задание 3</router-link>
     </ul>
   </div>
 </template>
